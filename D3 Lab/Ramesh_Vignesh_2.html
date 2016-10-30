@@ -1,0 +1,42 @@
+<html>
+	<head>
+		<meta name="author" content="Vignesh Ramesh">
+		<title>
+			Gapiminder
+		</title>
+
+	</head>
+	<body>
+		<style type="text/css">
+			h1  {color: white; background: black;}
+		</style>
+
+		<h1>Gapiminder - Wealth and Health</h1>
+		<h2>Countries</h2>
+    <div id="demo"></div>
+
+    <script>
+    var xmlhttp = new XMLHttpRequest();
+    var url = "https://raw.githubusercontent.com/CristianFelix/infoviz/master/gapminder.json";
+
+    xmlhttp.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+        var countries = JSON.parse(this.responseText);
+        display(countries);
+      }
+    };
+    xmlhttp.open("GET", url, true);
+    xmlhttp.send();
+
+    function display(country) {
+      var output = "";
+      var i;
+      for(i = 0; i < country.length; i++) {
+        output += country[i].name + '<br>';
+      }
+    document.getElementById("demo").innerHTML = output;
+    }
+    </script>
+
+  </body>
+</html>

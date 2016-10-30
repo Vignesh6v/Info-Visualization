@@ -1,0 +1,36 @@
+<html>
+	<head>
+		<meta name="author" content="Vignesh Ramesh">
+		<title>
+			Gapiminder
+		</title>
+
+	</head>
+	<body>
+		<style type="text/css">
+			h1  {color: white; background: black;}
+		</style>	
+
+		<h1>Gapiminder - Wealth and Health</h1>
+		<h2>Countries</h2>
+			Name <input type="text" id="newcountry" name="name"><button onclick="myFunction()">Add</button>
+		<hr>
+		<p id="demo"></p>
+
+		<script>
+			var countries = ["USA", "Mexico", "Canada"];
+			function incidentList(){
+			  var full_list = ""
+			  for(var i=0; i<countries.length; ++i){
+			      full_list = full_list + countries[i] + '<br>'
+			  }
+			  document.getElementById("demo").innerHTML = full_list;  
+			}
+			incidentList(countries);
+			function myFunction() {
+			    countries.push(document.getElementById("newcountry").value);
+			    incidentList(countries);
+			}
+		</script>		
+	</body>
+</html>

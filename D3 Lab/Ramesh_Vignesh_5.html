@@ -1,0 +1,239 @@
+<html>
+	<head>
+		<meta name="author" content="Vignesh Ramesh">
+		<title>
+			Gapiminder
+		</title>
+	</head>
+
+	<body>
+		<style type="text/css">
+			h1  {color: white; background: black;}
+			.countrylist{
+				list-style: none;
+				padding: 10px;
+				float: left;
+			}
+			.axis path,
+			.axis line{
+				fill: none;
+				stroke: #ccc;
+				shape-rendering: crispEdges;
+			}
+			.axis text{
+				font-size: 11;
+			}
+			#tooltip {
+			  position: absolute;
+				top: 0;
+				left: 0;
+				background-color: rgba(255, 255, 255, 0.8);
+				padding:10;
+				border: solid 1px black;
+				visibility: hidden;
+				transition: all 0.5s ;
+			}
+		</style>
+		<div id="title">
+				<h1>Gapiminder - Wealth and Health</h1>
+				<h2>Countries</h2>
+	  </div>
+
+		<div>
+			<ul class="countrylist" id="list"></ul>
+			<svg id="graph"></svg>
+		</div>
+		<input type="range" id="yearSelect" min="1900" max="2009" value="2008" style="width:500" onchange="setYear(this.value)" >x
+		<div id="tooltip" style="position:absolute;"></div>
+  </body>
+
+
+	<script src="http://d3js.org/d3.v3.min.js"></script>
+	<script>
+			// Parameters
+			var url = "https://raw.githubusercontent.com/CristianFelix/infoviz/master/Week%203/newData.json";
+			var year = 2008
+			var width = 500,
+					height = 400,
+					margin = {top:20 , left:20 , right: 20 , bottom:20 },
+					innerWidth = width - margin.left - margin.right,
+					innerHeight = height - margin.top - margin.bottom;
+					//console.log(innerHeight);
+
+			//Global Variable
+			var data = []
+			var chart = d3.select("#graph");
+			var list = d3.select("#list")
+			var yearLabel = chart.append("text")
+													 .text(year)
+													 .style({"font-size": 50, fill:"#ccc"})
+													 .attr('dx', 50)
+													 .attr('dy', 70)
+
+			var scatterplot = chart.append('g')
+														 .attr("transform","translate(" +margin.left+ "," +margin.top+ ")");
+
+		  var xAxisgroup = chart.append("g")
+								 .attr("class", "x axis")
+								 .attr("transform","translate("+margin.left+","+(innerHeight+margin.top)+")")
+
+			var yAxisgroup = chart.append("g")
+								 .attr('class', 'y axis')
+								 //.attr("transform","rotate(-90)");
+								 .attr("transform","translate("+margin.left+","+(margin.top)+")");
+
+
+
+      // Highlight
+			function highlight(name){
+				scatterplot.selectAll("circle")
+									 .style("stroke",function(d){
+										return d.name == name ? "black":"undefined"
+									});
+				//d3.select(this).style({stroke: undefined});
+				list.selectAll("li")
+						.style("background-color",function(d){
+						 return d.name == name ? "black":"undefined"
+					 })
+					 .style("color",function(d){
+						return d.name == name ? "white":"undefined"
+					})
+
+			};
+
+			// Unhighlight
+			function unhiglight(){
+				scatterplot.selectAll("circle")
+									 .style("stroke",undefined);
+
+				list.selectAll("li")
+					  .style("background-color", undefined)
+						.style("color",undefined);
+			};
+
+			//SetYear
+			function setYear(newyear){
+				year = newyear;
+				yearLabel.text(year);
+				render(data);
+			};
+
+
+			//Generate Country List
+ 		  function renderlist(data){
+					var selection = list.selectAll("li")
+						.data(data, function(d){ return d.name});
+
+					selection.enter()
+						.append("li")
+						.text(function (d) {return d.name})
+						.on("mouseenter", function(d){
+								highlight(d.name);
+						})
+						.on("mouseleave", function(d){
+								unhiglight();
+						});
+
+					selection.exit().remove();
+			};
+
+
+			// Generate the Chart
+			function renderchart(data){
+
+				chart.attr('width', width)
+									 .attr('height',height);
+
+				 var xValue = function(d) {return d.income[year];},
+				 		 xScale = d3.scale.linear()
+											 				.range([0,innerWidth])
+											 				.domain([-2000, d3.max(data, xValue)+1]),
+						 xMap = function(d){ return xScale(xValue(d));},
+						 xAxis = d3.svg.axis().scale(xScale)
+						 											.orient("bottom")
+																	.tickFormat(function(d){
+																		var prefix = d3.formatPrefix(d);
+																		return prefix.scale(d) + prefix.symbol
+																	})
+																	.tickSize(-460);
+
+
+				 var yValue = function(d) {return d.lifeExpectancy[year];},
+	 					 yScale = d3.scale.linear()
+											 				.range([innerHeight,0])
+											 				.domain([d3.min(data, yValue)-1, d3.max(data, yValue)+1]),
+						 yMap = function(d) { return yScale(yValue(d));},
+				     yAxis = d3.svg.axis().scale(yScale)
+						 											.orient("left")
+																	.tickSize(-560);;
+
+					var rValue = function(d) {return d.population[year];},
+	 						rScale = d3.scale.linear()
+	 														 .range([50,1000])
+						 								 	 .domain([d3.min(data, rValue)-1, d3.max(data, rValue)+1]),
+						  rMap = function(d) { return Math.sqrt(rScale(rValue(d))/Math.PI);};
+
+					var cValue = function(d) { return d.region;},
+							cScale = d3.scale.category10(),
+							cMap = function(d) {return cScale(cValue(d));};
+
+
+					xAxisgroup.call(xAxis);
+					yAxisgroup.call(yAxis);
+
+					var selection = scatterplot.selectAll("circle")
+										.data(data,function(d){
+											return d.name;
+										});
+
+					 selection.enter()
+										.append("circle")
+										.on("click",function(d){
+											alert(d.name);
+										})
+										.on("mouseenter",function(d){
+												highlight(d.name);
+												d3.select("#tooltip").style({
+													visibility: "visible",
+													top: d3.event.clientY,
+													left: d3.event.clientX
+												}).text(d.name)
+										})
+										.on("mouseleave",function(d){
+												unhiglight(d.name);
+												d3.select("#tooltip").style({
+													visibility: "hidden"
+												});
+										});
+				 selection.exit().remove();
+
+				 selection.transition()
+									.attr("r", rMap)
+									.attr("cx", xMap)
+									.attr("cy", yMap)
+									.attr("fill", cMap)
+									.attr("opacity",0.7)
+			};
+
+			function render(data){
+				var filteredresult = data.filter(function (d) {
+					return d.income[year] != undefined && d.lifeExpectancy[year] != undefined && d.population[year] != undefined
+				})
+				//console.log(filteredresult);
+
+				filteredresult.sort(function(a,b){ return d3.ascending(a.name,b.name)});
+				renderchart(filteredresult);
+				renderlist(filteredresult);
+			};
+
+
+			d3.json(url, function(error,result){
+				data = result
+				render(result);
+			});
+
+
+
+
+	</script>
+</html>
